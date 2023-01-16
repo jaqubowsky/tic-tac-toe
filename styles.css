@@ -1,7 +1,97 @@
+@import url("https://fonts.googleapis.com/css2?family=Varela+Round&display=swap");
+
 *,
 *::after,
 *::before {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: "Varela Round", sans-serif;
+}
+
+/* MAIN LAYOUT */
+
+html {
+  min-height: 100%;
+  position: relative;
+}
+
+body {
+  text-align: center;
+  color: #46494b;
+  line-height: 1.5;
+  margin-bottom: 80px;
+}
+
+/* HEADER */
+
+.header {
+  background-color: #4c5c68;
+  color: #b0e4db;
+  padding: 0.5em;
+  font-size: 1.7rem;
+}
+
+/* MAIN */
+
+.message {
+  font-size: 2rem;
+  padding: 25px;
+}
+
+/* MAIN GRID */
+
+.gameboard-grid {
+  display: grid;
+  justify-content: center;
+  align-content: center;
+  grid-template: repeat(3, 100px) / repeat(3, 100px);
+}
+
+.field {
+  cursor: pointer;
+  border: 1px solid #252525;
+}
+
+/* BTN */
+.btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1em;
+}
+
+.restart-btn {
+  padding: 0.2em 0.6em;
+  font-size: 2rem;
+  border-radius: 7px;
+  border: 3px solid #555;
+  color: #b0e4db;
+  background-color: #4c5c68;
+}
+
+/* FOOTER */
+
+.footer {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 10px;
+  padding: 10px;
+  bottom: 0;
+  left: 0;
+}
+
+/* MEDIA QUERIES */
+
+@media (min-width: 660px) {
+  :root {
+    font-size: 25px;
+  }
+
+  .gameboard-grid {
+    grid-template: repeat(3, 150px) / repeat(3, 150px);
+  }
 }
