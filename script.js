@@ -9,57 +9,64 @@ const Player = (sign) => {
 const gameBoard = (() => {
   const gameBoardArray = ["", "", "", "", "", "", "", "", ""];
 
-  const renderBoard = () => {
-    let gameBoardHtml = "";
-
-    gameBoardArray.forEach((field, index) => {
-      gameBoardHtml += `<div class="field" data-field="${index}">${field}</div>`;
-    });
-    document.getElementById("gameBoard").innerHTML = gameBoardHtml;
-
-    displayController.updateMessage();
+  const updateBoardField = (sign, index) => {
+    gameBoardArray[index] = sign;
   };
 
-  const clearBoard = () => {
+  const clearGameBoardArray = () => {
     gameBoardArray.forEach((field, index) => {
       gameBoardArray[index] = "";
     });
-    renderBoard();
   };
 
-  const updateBoard = (sign, index) => {
-    if (gameBoardArray[index] !== "") return;
-    displayController.updateRound();
-    gameBoardArray[index] = sign;
-    renderBoard();
-  };
-
-  return { renderBoard, clearBoard, updateBoard };
+  return { gameBoardArray, updateBoardField, clearGameBoardArray };
 })();
 
 const displayController = (() => {
-  const playerO = Player("O");
+  const updateRoundMessage = () => {
+    const message = document.getElementById("message");
+    message.textContent = `Player ${gameController.getCurrentPlayer()}'s turn`;
+  };
+
+  const renderBoard = () => {
+    displayController.updateRoundMessage();
+
+    let gameBoardHtml = "";
+
+    gameBoard.gameBoardArray.forEach((field, index) => {
+      gameBoardHtml += `<div class="field" data-field="${index}">${field}</div>`;
+    });
+    document.getElementById("gameBoard").innerHTML = gameBoardHtml;
+  };
+
+  return {
+    updateRoundMessage, renderBoard
+  };
+})();
+
+const gameController = (() => {
   const playerX = Player("X");
+  const playerO = Player("O");
   let round = 1;
 
   document.addEventListener("click", (e) => {
-    if (!e.target.dataset.field) return;
-    makeMove(e.target.dataset.field);
+    if (e.target.dataset.field) makeMove(e.target.dataset.field);
+
+    if (e.target.id === "restartBtn") restartGame();
   });
-
-  const makeMove = (index) => {
-    gameBoard.updateBoard(getCurrentPlayer(), index);
-    updateMessage();
-  };
-
-  const updateMessage = () => {
-    const message = document.getElementById("message");
-    message.textContent = `Player ${getCurrentPlayer()}'s turn`;
-  };
 
   const getCurrentPlayer = () => {
     if (round % 2 === 1) return playerX.getPlayerSign();
     return playerO.getPlayerSign();
+  };
+
+  const makeMove = (index) => {
+    console.log(round)
+    if (gameBoard.gameBoardArray[index] !== "") return;
+
+    gameBoard.updateBoardField(getCurrentPlayer(), index);
+    updateRound()
+    displayController.renderBoard();
   };
 
   const updateRound = () => {
@@ -69,20 +76,13 @@ const displayController = (() => {
   };
 
   const restartGame = () => {
-    document.getElementById("restartBtn").addEventListener("click", () => {
-      round = 1;
-      gameBoard.clearBoard();
-    });
+    round = 1;
+    displayController.updateRoundMessage();
+    gameBoard.clearGameBoardArray();
+    displayController.renderBoard()
   };
 
-  return {
-    makeMove,
-    restartGame,
-    getCurrentPlayer,
-    updateRound,
-    updateMessage,
-  };
+  return { getCurrentPlayer, updateRound};
 })();
 
-gameBoard.renderBoard();
-displayController.restartGame();
+displayController.renderBoard();
