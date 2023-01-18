@@ -9,11 +9,11 @@ const Player = (sign) => {
 const gameBoard = (() => {
   const gameBoardArray = ["", "", "", "", "", "", "", "", ""];
 
+  const getBoardField = (index) => gameBoardArray[index];
+
   const updateBoardField = (sign, index) => {
     gameBoardArray[index] = sign;
   };
-
-  const getBoardField = (index) => gameBoardArray[index];
 
   const clearGameBoardArray = () => {
     for (let i = 0; i < gameBoardArray.length; i += 1) {
@@ -33,16 +33,22 @@ const gameBoard = (() => {
     document.getElementById("gameBoard").innerHTML = gameBoardHtml;
   };
 
-  return {
-    updateBoardField,
-    clearGameBoardArray,
-    getBoardField,
-    renderBoard,
-  };
+  return { updateBoardField, clearGameBoardArray, getBoardField, renderBoard };
 })();
 
 const displayController = (() => {
   const messageElement = document.getElementById("message");
+
+  document.addEventListener("click", (e) => {
+    if (e.target.dataset.field) {
+      if (e.target.textContent !== "" || gameController.getIsOver()) return;
+
+      gameController.playGame(e.target.dataset.field);
+      displayController.updateBoard();
+    }
+
+    if (e.target.id === "restartBtn") gameController.restartGame();
+  });
 
   const updateWinMessage = (winner) => {
     if (winner === "Draw") {
@@ -57,9 +63,7 @@ const displayController = (() => {
   };
 
   const updateBoard = () => {
-    const gameBoardField = document.querySelectorAll(".field");
-
-    gameBoardField.forEach((field, index) => {
+    document.querySelectorAll(".field").forEach((field, index) => {
       field.textContent = gameBoard.getBoardField(index);
     });
   };
@@ -70,65 +74,67 @@ const displayController = (() => {
 const gameController = (() => {
   const playerX = Player("X");
   const playerO = Player("O");
-  let round = 0;
+  let round = 1;
   let isOver = false;
 
-  document.addEventListener("click", (e) => {
-    if (e.target.dataset.field) makeMove(e.target.dataset.field);
-
-    if (e.target.id === "restartBtn") restartGame();
-  });
-
   const getCurrentPlayerSign = () =>
-    round % 2 === 0 ? playerX.getPlayerSign() : playerO.getPlayerSign();
+    round % 2 === 1 ? playerX.getPlayerSign() : playerO.getPlayerSign();
 
-  const makeMove = (index) => {
-    if (gameBoard.getBoardField(index) !== "" || isOver) return;
-    gameBoard.updateBoardField(getCurrentPlayerSign(), index);
-    displayController.updateBoard();
+  const playGame = (index) => {
+    gameBoard.updateBoardField(gameController.getCurrentPlayerSign(), index);
 
-    if (checkWin()) {
+    if (checkWinner()) {
       isOver = true;
       displayController.updateWinMessage(getCurrentPlayerSign());
       return;
     }
 
-    round += 1;
-    displayController.updateRoundMessage(getCurrentPlayerSign());
-
     if (round === 9) {
       isOver = true;
       displayController.updateWinMessage("Draw");
+      return;
     }
+
+    round += 1;
+    displayController.updateRoundMessage(getCurrentPlayerSign());
   };
 
+  const checkWinner = () => {
+    const possibleWinCombinations = [
+      [0, 1, 2],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+
+    return possibleWinCombinations.some((combinations) =>
+      combinations.every(
+        (val) => gameBoard.getBoardField(val) === getCurrentPlayerSign()
+      )
+    );
+  };
+
+  const getIsOver = () => isOver;
+
   const restartGame = () => {
-    round = 0;
+    round = 1;
     isOver = false;
     gameBoard.clearGameBoardArray();
     displayController.updateRoundMessage(getCurrentPlayerSign());
     displayController.updateBoard();
   };
 
-  const possibleWinCombinations = [
-    [0, 1, 2],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-  ];
-
-  const checkWin = () =>
-    possibleWinCombinations.some((combinations) =>
-      combinations.every(
-        (val) => gameBoard.getBoardField(val) === getCurrentPlayerSign()
-      )
-    );
-
-  return { getCurrentPlayerSign, checkWin };
+  return {
+    getCurrentPlayerSign,
+    checkWinner,
+    getIsOver,
+    playGame,
+    restartGame,
+  };
 })();
 
 gameBoard.renderBoard();
