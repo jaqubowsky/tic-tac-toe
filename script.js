@@ -13,41 +13,65 @@ const gameBoard = (() => {
     gameBoardArray[index] = sign;
   };
 
+  const getBoardField = (index) => gameBoardArray[index];
+
   const clearGameBoardArray = () => {
-    gameBoardArray.forEach((field, index) => {
-      gameBoardArray[index] = "";
-    });
-  };
-
-  return { gameBoardArray, updateBoardField, clearGameBoardArray };
-})();
-
-const displayController = (() => {
-  const updateRoundMessage = () => {
-    const message = document.getElementById("message");
-    message.textContent = `Player ${gameController.getCurrentPlayer()}'s turn`;
+    for (let i = 0; i < gameBoardArray.length; i += 1) {
+      gameBoardArray[i] = "";
+    }
   };
 
   const renderBoard = () => {
-    displayController.updateRoundMessage();
+    displayController.updateRoundMessage(gameController.getCurrentPlayerSign());
 
     let gameBoardHtml = "";
 
-    gameBoard.gameBoardArray.forEach((field, index) => {
+    gameBoardArray.forEach((field, index) => {
       gameBoardHtml += `<div class="field" data-field="${index}">${field}</div>`;
     });
+
     document.getElementById("gameBoard").innerHTML = gameBoardHtml;
   };
 
   return {
-    updateRoundMessage, renderBoard
+    updateBoardField,
+    clearGameBoardArray,
+    getBoardField,
+    renderBoard,
   };
+})();
+
+const displayController = (() => {
+  const messageElement = document.getElementById("message");
+
+  const updateWinMessage = (winner) => {
+    if (winner === "Draw") {
+      messageElement.textContent = "It's a draw!";
+    } else {
+      messageElement.textContent = `Player ${winner}'s win!`;
+    }
+  };
+
+  const updateRoundMessage = (sign) => {
+    messageElement.textContent = `Player ${sign}'s turn!`;
+  };
+
+  const updateBoard = () => {
+    const gameBoardField = document.querySelectorAll(".field");
+
+    gameBoardField.forEach((field, index) => {
+      field.textContent = gameBoard.getBoardField(index);
+    });
+  };
+
+  return { updateWinMessage, updateBoard, updateRoundMessage };
 })();
 
 const gameController = (() => {
   const playerX = Player("X");
   const playerO = Player("O");
-  let round = 1;
+  let round = 0;
+  let isOver = false;
 
   document.addEventListener("click", (e) => {
     if (e.target.dataset.field) makeMove(e.target.dataset.field);
@@ -55,34 +79,56 @@ const gameController = (() => {
     if (e.target.id === "restartBtn") restartGame();
   });
 
-  const getCurrentPlayer = () => {
-    if (round % 2 === 1) return playerX.getPlayerSign();
-    return playerO.getPlayerSign();
-  };
+  const getCurrentPlayerSign = () =>
+    round % 2 === 0 ? playerX.getPlayerSign() : playerO.getPlayerSign();
 
   const makeMove = (index) => {
-    console.log(round)
-    if (gameBoard.gameBoardArray[index] !== "") return;
+    if (gameBoard.getBoardField(index) !== "" || isOver) return;
+    gameBoard.updateBoardField(getCurrentPlayerSign(), index);
+    displayController.updateBoard();
 
-    gameBoard.updateBoardField(getCurrentPlayer(), index);
-    updateRound()
-    displayController.renderBoard();
-  };
-
-  const updateRound = () => {
-    if (round === 9) return;
+    if (checkWin()) {
+      isOver = true;
+      displayController.updateWinMessage(getCurrentPlayerSign());
+      return;
+    }
 
     round += 1;
+    displayController.updateRoundMessage(getCurrentPlayerSign());
+
+    if (round === 9) {
+      isOver = true;
+      displayController.updateWinMessage("Draw");
+    }
   };
 
   const restartGame = () => {
-    round = 1;
-    displayController.updateRoundMessage();
+    round = 0;
+    isOver = false;
     gameBoard.clearGameBoardArray();
-    displayController.renderBoard()
+    displayController.updateRoundMessage(getCurrentPlayerSign());
+    displayController.updateBoard();
   };
 
-  return { getCurrentPlayer, updateRound};
+  const possibleWinCombinations = [
+    [0, 1, 2],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+
+  const checkWin = () =>
+    possibleWinCombinations.some((combinations) =>
+      combinations.every(
+        (val) => gameBoard.getBoardField(val) === getCurrentPlayerSign()
+      )
+    );
+
+  return { getCurrentPlayerSign, checkWin };
 })();
 
-displayController.renderBoard();
+gameBoard.renderBoard();
